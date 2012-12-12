@@ -35,7 +35,7 @@ ruby_block "save node data" do
     node.save
   end
   action :create
-end
+end unless Chef::Config[:solo]
 
 %w{apt-utils dpkg-dev reprepro debian-keyring devscripts dput}.each do |pkg|
   package pkg
