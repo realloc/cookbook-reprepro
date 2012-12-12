@@ -77,10 +77,10 @@ execute "import packaging key" do
   command "/bin/echo -e '#{apt_repo["pgp"]["private"]}' | gpg --import -"
   user "root"
   cwd "/root"
-  not_if "gpg --list-secret-keys --fingerprint #{node[:reprepro][:pgp_email]} | egrep -qx '.*Key fingerprint = #{node[:reprepro][:pgp_fingerprint]}'"
+  not_if "gpg --list-secret-keys --fingerprint #{node['reprepro']['pgp_email']} | egrep -qx '.*Key fingerprint = #{node['reprepro']['pgp_fingerprint']}'"
 end
 
-template "#{apt_repo["repo_dir"]}/#{node[:reprepro][:pgp_email]}.gpg.key" do
+template "#{apt_repo["repo_dir"]}/#{node['reprepro']['pgp_email']}.gpg.key" do
   source "pgp_key.erb"
   mode "0644"
   owner "nobody"
@@ -90,7 +90,7 @@ template "#{apt_repo["repo_dir"]}/#{node[:reprepro][:pgp_email]}.gpg.key" do
   )
 end
 
-template "#{node[:apache][:dir]}/sites-available/apt_repo.conf" do
+template "#{node['apache']['dir']}/sites-available/apt_repo.conf" do
   source "apt_repo.conf.erb"
   mode 0644
   owner "root"
