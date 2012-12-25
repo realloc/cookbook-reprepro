@@ -100,6 +100,13 @@ template "#{node['apache']['dir']}/sites-available/apt_repo.conf" do
   )
 end
 
+execute "reprepro export" do
+  command "reprepro export"
+  user "root"
+  cwd apt_repo["repo_dir"]
+  not_if "reprepro check"
+end
+
 apache_site "apt_repo.conf"
 
 apache_site "000-default" do
