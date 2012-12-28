@@ -73,11 +73,11 @@ end
   end
 end
 
-execute "import packaging key" do
-  command "/bin/echo -e '#{apt_repo["pgp"]["private"]}' | gpg --import -"
-  user "root"
-  cwd "/root"
-  not_if "gpg --list-secret-keys --fingerprint #{node['reprepro']['pgp_email']} | egrep -qx '.*Key fingerprint = #{node['reprepro']['pgp_fingerprint']}'"
+apt_repo["pgp"]["users"].each do |pgpuser|
+  execute "import packaging key for #{pgpuser}" do
+    command "/bin/echo -e '#{apt_repo["pgp"]["private"]}' | sudo -u #{pgpuser} gpg --import -"
+    not_if "gpg --list-secret-keys --fingerprint #{node['reprepro']['pgp_email']} | egrep -qx '.*Key fingerprint = #{node['reprepro']['pgp_fingerprint']}'"
+  end
 end
 
 template "#{apt_repo["repo_dir"]}/#{node['reprepro']['pgp_email']}.gpg.key" do
