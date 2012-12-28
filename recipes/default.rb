@@ -28,6 +28,9 @@ node.set_unless.reprepro.description = apt_repo['description']
 node.set_unless.reprepro.pgp_email = apt_repo['pgp']['email']
 node.set_unless.reprepro.pgp_fingerprint = apt_repo['pgp']['fingerprint']
 
+apt_repo_owner = apt_repo['owner'] || "nobody"
+apt_repo_group = apt_repo['group'] || "nogroup"
+apt_repo_mode = apt_repo['mode'] || "0755"
 apt_repo_allow = apt_repo["allow"] || []
 
 ruby_block "save node data" do
@@ -43,26 +46,26 @@ end
 
 [ apt_repo["repo_dir"], apt_repo["incoming"] ].each do |dir|
   directory dir do
-    owner "nobody"
-    group "nogroup"
-    mode "0755"
+    owner apt_repo_owner
+    group apt_repo_group
+    mode  apt_repo_mode
   end
 end
 
 %w{ conf db dists pool tarballs }.each do |dir|
   directory "#{apt_repo["repo_dir"]}/#{dir}" do
-    owner "nobody"
-    group "nogroup"
-    mode "0755"
+    owner apt_repo_owner
+    group apt_repo_group
+    mode  apt_repo_mode
   end
 end
 
 %w{ distributions incoming pulls }.each do |conf|
   template "#{apt_repo["repo_dir"]}/conf/#{conf}" do
     source "#{conf}.erb"
-    mode "0644"
-    owner "nobody"
-    group "nogroup"
+    owner apt_repo_owner
+    group apt_repo_group
+    mode  apt_repo_mode
     variables(
       :allow => apt_repo_allow,
       :codenames => apt_repo["codenames"],
