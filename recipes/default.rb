@@ -104,10 +104,10 @@ template "#{node['apache']['dir']}/sites-available/apt_repo.conf" do
 end
 
 execute "reprepro export" do
-  command "reprepro export"
+  command "sudo -u #{apt_repo_owner} reprepro export"
   user "root"
   cwd apt_repo["repo_dir"]
-  not_if "reprepro check"
+  not_if "sudo -u #{apt_repo_owner} reprepro check"
 end
 
 apache_site "apt_repo.conf"
