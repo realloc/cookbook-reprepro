@@ -79,7 +79,7 @@ end
 apt_repo["pgp"]["users"].each do |pgpuser|
   execute "import packaging key for #{pgpuser}" do
     command "/bin/echo -e '#{apt_repo["pgp"]["private"]}' | sudo -u #{pgpuser} gpg --import -"
-    not_if "gpg --list-secret-keys --fingerprint #{node['reprepro']['pgp_email']} | egrep -qx '.*Key fingerprint = #{node['reprepro']['pgp_fingerprint']}'"
+    not_if "sudo -u #{pgpuser} gpg --list-secret-keys --fingerprint #{apt_repo['pgp']['email']} | egrep -qx '.*Key fingerprint = #{apt_repo['pgp']['fingerprint']}'"
   end
 end
 
