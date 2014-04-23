@@ -61,8 +61,8 @@ end
 end
 
 
-apt_repo["codenames"].echo do |dist|
-  %w{incoming distributions pulls}.each do |conf|
+apt_repo["codenames"].each do |dist|
+  %w{distributions}.each do |conf|
     template "/tmp/#{conf}.#{dist}-chef" do
       source "#{conf}.erb"
       owner apt_repo_owner
@@ -78,38 +78,83 @@ apt_repo["codenames"].echo do |dist|
     )
     end
 
+    unless ::File.exists?("#{apt_repo['repo_dir']}/conf/#{conf}")
+      file "#{apt_repo['repo_dir']}/conf/#{conf}" do
+        owner apt_repo_owner
+        group apt_repo_group
+        mode apt_repo_mode
+        action :touch
+      end
+    end
+
     ruby_block "filedit" do
       block do
-        unless ::File.exists?("#{node['reprepro']['repo_dir']}/conf/#{conf}")
-          file "#{node['reprepro']['repo_dir']}/conf/#{conf}" do
-            owner apt_repo_owner
-            group apt_repo_group
-            mode apt_repo_mode
-            action :touch
-          end
-        end
-
-        contents = ::File.read("/tmp/#{conf}.#{dist}-chef")
-
-        if ::File.exists?("/tmp/#{conf}.#{dist}-chef")
-          file "/tmp/#{conf}.#{dist}-chef" do
-            action :remove
-            backup 0
-          end
-        end
-
-        rc = Chef::Util::FileEdit.new("#{node['reprepro']['repo_dir']}/conf/#{conf}")
-        rc.insert_line_if_no_match("/#{contents}/", contents)
-        rc.write_file
-
-        file "#{node['reprepro']['repo_dir']}/conf/#{conf}" do
-          owner apt_repo_owner
-          group apt_repo_group
-          mode apt_repo_mode
-          action :touch
+        new_text = ::File.read("/tmp/#{conf}.#{dist}-chef")
+        old_text = ::File.read("#{apt_repo['repo_dir']}/conf/#{conf}")
+        unless old_text.match(new_text)
+          ::File.open("#{apt_repo['repo_dir']}/conf/#{conf}", 'a') { |f| f.write(new_text) }
         end
       end
     end
+
+    file "/tmp/#{conf}.#{dist}-chef" do
+      action :delete
+      backup 0
+    end
+
+    file "#{apt_repo['repo_dir']}/conf/#{conf}" do
+        owner apt_repo_owner
+        group apt_repo_group
+        mode apt_repo_mode
+        action :touch
+    end
+  end
+end
+
+%w{incoming pulls}.each do |conf|
+  template "/tmp/#{conf}.default-chef" do
+    source "#{conf}.erb"
+    owner apt_repo_owner
+    group apt_repo_group
+    mode  apt_repo_mode
+    variables(
+                :allow => apt_repo_allow,
+                :codenames => apt_repo["codenames"],
+                :architectures => apt_repo["architectures"],
+                :incoming => apt_repo["incoming"],
+                :pulls => apt_repo["pulls"]
+                )
+  end
+
+  unless ::File.exists?("#{apt_repo['repo_dir']}/conf/#{conf}")
+    file "#{apt_repo['repo_dir']}/conf/#{conf}" do
+      owner apt_repo_owner
+      group apt_repo_group
+      mode apt_repo_mode
+      action :touch
+    end
+  end
+
+  ruby_block "filedit" do
+    block do
+      new_text = ::File.read("/tmp/#{conf}.default-chef")
+      old_text = ::File.read("#{apt_repo['repo_dir']}/conf/#{conf}")
+      unless old_text.match(new_text)
+        ::File.open("#{apt_repo['repo_dir']}/conf/#{conf}", 'a') { |f| f.write(new_text) }
+      end
+    end
+  end
+
+  file "/tmp/#{conf}.default-chef" do
+    action :delete
+    backup 0
+  end
+
+  file "#{apt_repo['repo_dir']}/conf/#{conf}" do
+    owner apt_repo_owner
+    group apt_repo_group
+    mode apt_repo_mode
+    action :touch
   end
 end
 
